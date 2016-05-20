@@ -182,7 +182,7 @@ class DB(conn: Connection)(implicit typeMapper: TypeMapper = new TypeMapper()){
     selectFirst(template)(_.getString(1))
   }
 
-  def transactionally(): ManagedResource[DB] = new Traversable[DB] {
+  def transactionally: ManagedResource[DB] = new Traversable[DB] {
     override def foreach[U](f: DB => U) = try {
       conn.setAutoCommit(false)
       f(DB.this)

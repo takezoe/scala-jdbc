@@ -1,6 +1,8 @@
 name := "better-jdbc"
 
-version := "1.0"
+organization := "com.github.takezoe"
+
+version := "1.0.0"
 
 scalaVersion := "2.11.8"
 

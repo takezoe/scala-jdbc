@@ -2,6 +2,12 @@
 
 Better JDBC wrapper for Scala based on [better-files](https://github.com/pathikrit/better-files)'s auto resource management.
 
+```scala
+resolvers += "amateras-repo" at "http://amateras.sourceforge.jp/mvn/"
+
+libraryDependencies += "com.github.takezoe" %% "better-jdbc" % "0.0.1"
+```
+
 You can use better-jdbc by adding a following import statements:
 
 ```scala

@@ -6,7 +6,7 @@ import better.files._
 
 import scala.reflect.ClassTag
 
-class DB(conn: Connection, typeMapper: TypeMapper){
+class DB(conn: Connection)(implicit typeMapper: TypeMapper = new TypeMapper()){
 
   def update(template: SqlTemplate): Int = {
     execute(conn, template){ stmt =>
@@ -180,6 +180,18 @@ class DB(conn: Connection, typeMapper: TypeMapper){
 
   def selectString(template: SqlTemplate): Option[String] = {
     selectFirst(template)(_.getString(1))
+  }
+
+  def transactionally(): ManagedResource[DB] = new Traversable[DB] {
+    override def foreach[U](f: DB => U) = try {
+      conn.setAutoCommit(false)
+      f(DB.this)
+      conn.commit()
+    } catch {
+      case e: Throwable =>
+        conn.rollback()
+        throw e
+    }
   }
 
   def close(): Unit = conn.close()

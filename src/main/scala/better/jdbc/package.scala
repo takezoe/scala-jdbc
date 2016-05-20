@@ -11,7 +11,7 @@ package object jdbc {
    * String interpolation to convert a variable-embedded SQL to SqlTemplate
    */
   implicit class SqlStringInterpolation(val sc: StringContext) extends AnyVal {
-    def sql(args: Any*): (String, Seq[Any]) = (sc.parts.mkString("?"), args.toSeq)
+    def sql(args: Any*): SqlTemplate = SqlTemplate(sc.parts.mkString("?"), args.toSeq)
   }
 
   case class SqlTemplate(sql: String, params: Any*)

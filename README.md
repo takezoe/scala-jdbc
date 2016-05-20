@@ -2,9 +2,10 @@
 
 Better JDBC wrapper for Scala based on [better-files](https://github.com/pathikrit/better-files)'s auto resource management.
 
-You can use better-jdbc by adding a following import statement only:
+You can use better-jdbc by adding a following import statements:
 
 ```scala
+import better.files._
 import better.jdbc._
 ```
 
@@ -24,7 +25,7 @@ val results = for {
 val users: Seq[(Int, String)] = results.head
 ```
 
-Select a first record:
+Retrieve a first record:
 
 ```scala
 val results = for {
@@ -38,7 +39,7 @@ val results = for {
 val user: Option[(Int, String)] = results.head
 ```
 
-Map results to the case class:
+Map `ResultSet` to the case class:
 
 ```scala
 case class User(userId: Int, userName: String)
@@ -57,10 +58,17 @@ val users: Seq[User] = results.head
 ```scala
 for {
   db <- DB(conn).autoClosed
-} db.update(sql"INSERT INTO USER (USER_ID, USER_NAME) VALUES ($userId, $userName)")
+} db.update(sql"INSERT INTO USERS (USER_ID, USER_NAME) VALUES ($userId, $userName)")
 ```
 
 ## Transaction
 
-TODO
-
+```scala
+for {
+  db <- new DB(conn).autoClosed
+  tx <- db.transactionally
+} {
+  tx.update(sql"DELETE FROM GROUP WHERE USER_ID = $userId")
+  tx.update(sql"DELETE FROM USERS WHERE USER_ID = $userId")
+}
+```

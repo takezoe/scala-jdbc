@@ -8,22 +8,6 @@ You can use better-jdbc by adding a following import statement only:
 import better.jdbc._
 ```
 
-## Update
-
-You can pass plain SQL string or variable-embedded string with string interpolation prefixed by `sql`.
-
-```scala
-// Plain string
-for {
-  db <- DB(conn).autoClosed
-} db.update("DELETE FROM USER WHERE USER_ID = 1")
-
-// Embed variables
-for {
-  db <- DB(conn).autoClosed
-} db.update(sql"INSERT INTO USER (USER_ID, USER_NAME) VALUES ($userId, $userName)")
-```
-
 ## Select
 
 Extract values from `ResultSet`:
@@ -66,6 +50,20 @@ val results = for {
 }
 
 val users: Seq[User] = results.head
+```
+
+## Update
+
+```scala
+// Plain string
+for {
+  db <- DB(conn).autoClosed
+} db.update("DELETE FROM USER WHERE USER_ID = 1")
+
+// Embed variables
+for {
+  db <- DB(conn).autoClosed
+} db.update(sql"INSERT INTO USER (USER_ID, USER_NAME) VALUES ($userId, $userName)")
 ```
 
 ## Transaction

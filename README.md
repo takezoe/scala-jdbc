@@ -55,12 +55,6 @@ val users: Seq[User] = results.head
 ## Update
 
 ```scala
-// Plain string
-for {
-  db <- DB(conn).autoClosed
-} db.update("DELETE FROM USER WHERE USER_ID = 1")
-
-// Embed variables
 for {
   db <- DB(conn).autoClosed
 } db.update(sql"INSERT INTO USER (USER_ID, USER_NAME) VALUES ($userId, $userName)")

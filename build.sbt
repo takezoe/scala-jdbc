@@ -6,8 +6,6 @@ version := "1.0.0"
 
 scalaVersion := "2.11.8"
 
-libraryDependencies += "com.github.pathikrit" %% "better-files" % "2.16.0"
-
 publishTo <<= (version) { version: String =>
   val repoInfo =
     if (version.trim.endsWith("SNAPSHOT"))

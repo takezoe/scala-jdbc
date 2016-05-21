@@ -1,12 +1,19 @@
 package better.jdbc
 
 import java.sql._
-
-import better.files._
-
 import scala.reflect.ClassTag
 
-class DB(conn: Connection)(implicit typeMapper: TypeMapper = new TypeMapper()){
+object DB {
+
+  def apply(conn: Connection)(implicit typeMapper: TypeMapper = new TypeMapper()) =
+    new DB(conn, typeMapper)
+
+  def autoClose[T](conn: Connection)(f: DB => T)(implicit typeMapper: TypeMapper = new TypeMapper()) =
+    apply(conn).autoClose(f)
+
+}
+
+class DB(conn: Connection, typeMapper: TypeMapper){
 
   def update(template: SqlTemplate): Int = {
     execute(conn, template){ stmt =>
@@ -16,15 +23,20 @@ class DB(conn: Connection)(implicit typeMapper: TypeMapper = new TypeMapper()){
 
   def selectFirst[T](template: SqlTemplate)(f: ResultSet => T): Option[T] = {
     execute(conn, template){ stmt =>
-      (for {
-        rs <- stmt.executeQuery().autoClosed
-      } yield {
-        if(rs.next){
-          Some(f(rs))
-        } else {
-          None
+      try {
+        val rs = stmt.executeQuery()
+        try {
+          if(rs.next){
+            Some(f(rs))
+          } else {
+            None
+          }
+        } finally {
+          rs.close()
         }
-      }).head
+      } finally {
+        stmt.close()
+      }
     }
   }
 
@@ -96,15 +108,20 @@ class DB(conn: Connection)(implicit typeMapper: TypeMapper = new TypeMapper()){
 
   def select[T](template: SqlTemplate)(f: ResultSet => T): Seq[T] = {
     execute(conn, template){ stmt =>
-      (for {
-        rs <- stmt.executeQuery().autoClosed
-      } yield {
-        val list = new scala.collection.mutable.ListBuffer[T]
-        while(rs.next){
-          list += f(rs)
+      try {
+        val rs = stmt.executeQuery()
+        try {
+          val list = new scala.collection.mutable.ListBuffer[T]
+          while(rs.next){
+            list += f(rs)
+          }
+          list.toSeq
+        } finally {
+          rs.close()
         }
-        list.toSeq
-      }).head
+      } finally {
+        stmt.close()
+      }
     }
   }
 
@@ -182,11 +199,20 @@ class DB(conn: Connection)(implicit typeMapper: TypeMapper = new TypeMapper()){
     selectFirst(template)(_.getString(1))
   }
 
-  def transactionally: ManagedResource[DB] = new Traversable[DB] {
-    override def foreach[U](f: DB => U) = try {
-      conn.setAutoCommit(false)
-      f(DB.this)
+  def autoClose[T](f: DB => T): T = {
+    try {
+      f(this)
+    } finally {
+      close()
+    }
+  }
+
+  def transaction[T](f: => T): T = {
+    conn.setAutoCommit(false)
+    try {
+      val r = f
       conn.commit()
+      r
     } catch {
       case e: Throwable =>
         conn.rollback()
@@ -197,14 +223,15 @@ class DB(conn: Connection)(implicit typeMapper: TypeMapper = new TypeMapper()){
   def close(): Unit = conn.close()
 
   protected def execute[T](conn: Connection, template: SqlTemplate)(f: (PreparedStatement) => T): T = {
-    (for {
-      stmt <- conn.prepareStatement(template.sql).autoClosed
-    } yield {
+    val stmt = conn.prepareStatement(template.sql)
+    try {
       template.params.zipWithIndex.foreach { case (x, i) =>
         typeMapper.set(stmt, i + 1, x)
       }
       f(stmt)
-    }).head
+    } finally {
+      stmt.close()
+    }
   }
 
 }

@@ -5,7 +5,7 @@ Better JDBC wrapper for Scala.
 ```scala
 resolvers += "amateras-repo" at "http://amateras.sourceforge.jp/mvn/"
 
-libraryDependencies += "com.github.takezoe" %% "better-jdbc" % "1.0.0"
+libraryDependencies += "com.github.takezoe" %% "better-jdbc" % "1.0.1"
 ```
 
 You can use better-jdbc by adding a following import statements:
@@ -61,6 +61,18 @@ DB.autoClose(conn) { db =>
   db.transaction {
     db.update(sql"DELETE FROM GROUP WHERE USER_ID = $userId")
     db.update(sql"DELETE FROM USERS WHERE USER_ID = $userId")
+  }
+}
+```
+
+## Large data
+
+Process large data using `scan` method:
+
+```scala
+DB.autoClose(conn) { db =>
+  db.scan("SELECT * FROM USERS"){ rs =>
+    println(rs.getString("USER_NAME"))
   }
 }
 ```

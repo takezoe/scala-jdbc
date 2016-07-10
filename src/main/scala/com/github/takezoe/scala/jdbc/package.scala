@@ -1,4 +1,4 @@
-package better
+package com.github.takezoe.scala
 
 package object jdbc {
 

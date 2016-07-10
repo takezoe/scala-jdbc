@@ -1,4 +1,4 @@
-package better.jdbc
+package com.github.takezoe.scala.jdbc
 
 import java.sql._
 import scala.reflect.ClassTag

@@ -5,7 +5,7 @@ Better JDBC wrapper for Scala.
 ```scala
 resolvers += "amateras-repo" at "http://amateras.sourceforge.jp/mvn/"
 
-libraryDependencies += "com.github.takezoe" %% "scala-jdbc" % "1.0.1"
+libraryDependencies += "com.github.takezoe" %% "scala-jdbc" % "1.0.2"
 ```
 
 You can use better-jdbc by adding a following import statements:

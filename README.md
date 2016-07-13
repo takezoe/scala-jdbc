@@ -3,8 +3,6 @@
 Better JDBC wrapper for Scala.
 
 ```scala
-resolvers += "amateras-repo" at "http://amateras.sourceforge.jp/mvn/"
-
 libraryDependencies += "com.github.takezoe" %% "scala-jdbc" % "1.0.2"
 ```
 

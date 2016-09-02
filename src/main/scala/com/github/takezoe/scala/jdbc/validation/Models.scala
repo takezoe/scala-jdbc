@@ -22,7 +22,6 @@ class SelectModel {
     s"Select(from: $from, columns: $columns, orderBy; $orderBy, where: $where)"
   }
 
-  // TODO
   def validate() = {
     (columns ++ where ++ orderBy).foreach { column =>
       println(column)
@@ -33,7 +32,7 @@ class SelectModel {
       }
       table.map { table =>
         if(table.name != null){
-
+          // TODO Check with table definition which would be given from user
         } else {
           if (!table.select.columns.exists(x => x.name == column.name || x.alias == column.name)) {
             println("[ERROR]Column " + column + " does not exist!")

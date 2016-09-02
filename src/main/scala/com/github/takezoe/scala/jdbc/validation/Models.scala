@@ -15,14 +15,17 @@ class TableModel {
 class SelectModel {
   var from = new ListBuffer[TableModel]
   val columns = new ListBuffer[ColumnModel]
+  val orderBy = new ListBuffer[ColumnModel]
+  val where = new ListBuffer[ColumnModel]
 
   override def toString(): String = {
-    s"Select(from: $from, columns: $columns)"
+    s"Select(from: $from, columns: $columns, orderBy; $orderBy, where: $where)"
   }
 
   // TODO
   def validate() = {
-    columns.foreach { column =>
+    (columns ++ where ++ orderBy).foreach { column =>
+      println(column)
       val table = if (column.table != null){
         from.find(x => x.name == column.table || x.alias == column.table)
       } else {

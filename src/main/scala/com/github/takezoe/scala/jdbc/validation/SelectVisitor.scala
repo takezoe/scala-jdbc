@@ -48,6 +48,30 @@ class SelectVisitor extends SelectVisitorAdapter {
 
     }
 
+    Option(plainSelect.getWhere).foreach(_.accept(new ExpressionVisitorAdapter {
+      override def visit(column: Column): Unit = {
+        val c = new ColumnModel()
+        c.name = column.getColumnName
+        c.table = Option(column.getTable).map(_.getName).orNull
+        select.where += c
+      }
+    }))
+    Option(plainSelect.getOrderByElements).foreach(_.asScala.foreach { orderBy =>
+      println("OrderBy: " + orderBy)
+      orderBy.accept(new OrderByVisitor {
+        override def visit(orderBy: OrderByElement): Unit = {
+          orderBy.getExpression.accept(new ExpressionVisitorAdapter(){
+            override def visit(column: Column): Unit = {
+              val c = new ColumnModel()
+              c.name = column.getColumnName
+              c.table = Option(column.getTable).map(_.getName).orNull
+              select.orderBy += c
+            }
+          })
+        }
+      })
+    })
+
     println(select)
     select.validate()
   }

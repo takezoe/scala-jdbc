@@ -18,7 +18,7 @@ import net.sf.jsqlparser.statement.execute.Execute
 import net.sf.jsqlparser.statement.insert.Insert
 import net.sf.jsqlparser.statement.merge.Merge
 import net.sf.jsqlparser.statement.replace.Replace
-import net.sf.jsqlparser.statement.select.{Select, _}
+import net.sf.jsqlparser.statement.select.{FromItemVisitorAdapter, Select, _}
 import net.sf.jsqlparser.statement.truncate.Truncate
 import net.sf.jsqlparser.statement.update.Update
 
@@ -55,10 +55,40 @@ package object jdbc {
 class TableDef {
   var name: String = null
   var alias: String = null
+  var select: SelectDef = null
+
+  override def toString(): String = {
+    s"Select(name: $name, alias: $alias, select: $select)"
+  }
+}
+
+class SelectDef {
+  var from = new ListBuffer[TableDef]
   val columns = new ListBuffer[ColumnDef]
 
   override def toString(): String = {
-    s"Table(name: $name, alias: $alias, columns: $columns)"
+    s"Select(from: $from, columns: $columns)"
+  }
+
+  def validate() = {
+    columns.foreach { column =>
+      val table = if (column.table != null){
+        from.find(x => x.name == column.table || x.alias == column.table)
+      } else {
+        from.headOption
+      }
+      table.map { table =>
+        if(table.name != null){
+
+        } else {
+          if (!table.select.columns.exists(x => x.name == column.name || x.alias == column.name)) {
+            println("[ERROR]Column " + column + " does not exist!")
+          }
+        }
+      }.getOrElse {
+        println("[ERROR]Table " + column.table + " does not exist!")
+      }
+    }
   }
 }
 
@@ -74,43 +104,49 @@ class ColumnDef {
 
 object Macros {
 
-  class TableExtractor extends SelectVisitorAdapter {
+  class FromExtractor extends FromItemVisitorAdapter {
 
-    var table = new TableDef()
+    val table = new TableDef()
+
+    override def visit(tableName: Table): Unit = {
+      table.name = tableName.getName
+      table.alias = Option(tableName.getAlias).map(_.getName).orNull
+    }
+
+    override def visit(subSelect: SubSelect): Unit = {
+      val visitor = new SelectDefExtractor()
+      subSelect.getSelectBody.accept(visitor)
+      table.select = visitor.select
+      table.alias = Option(subSelect.getAlias).map(_.getName).orNull
+    }
+  }
+
+  class SelectDefExtractor extends SelectVisitorAdapter {
+
+    var select = new SelectDef()
 
     override def visit(plainSelect: PlainSelect): Unit = {
       Option(plainSelect.getJoins).map(_.asScala.foreach { join =>
-        println("SubJoin: Right=" + join.getRightItem + ", " + join.getOnExpression + ", " + Option(join.getUsingColumns).map(_.asScala).orNull)
+        val visitor = new FromExtractor()
+        join.getRightItem.accept(visitor)
+        select.from += visitor.table
       })
-      plainSelect.getFromItem.accept(new FromItemVisitorAdapter {
-        override def visit(tableName: Table): Unit = {
-          println("----")
-          println(tableName.getName)
-          println("----")
-          table.name = tableName.getName
-          table.alias = tableName.getAlias.getName
-        }
 
-        override def visit(subSelect: SubSelect): Unit = {
-          val visitor = new TableExtractor()
-          subSelect.getSelectBody.accept(visitor)
-          Option(subSelect.getAlias).map(_.getName).orNull
-          table.name = "<subquery>"
-          table.alias = Option(subSelect.getAlias).map(_.getName).orNull
-        }
-      })
+      val visitor = new FromExtractor()
+      plainSelect.getFromItem.accept(visitor)
+      select.from += visitor.table
 
       plainSelect.getSelectItems.asScala.foreach { item =>
         item.accept(new SelectItemVisitorAdapter {
           override def visit(columns: AllColumns): Unit = {
             val column = new ColumnDef()
             column.name = "*"
-            if(table.alias == null){
-              column.table = table.name
-            } else {
-              column.table = table.alias
-            }
-            table.columns += column
+//            if(table.alias == null){
+//              column.table = table.name
+//            } else {
+//              column.table = table.alias
+//            }
+            select.columns += column
           }
           override def visit(selectExpressionItem: SelectExpressionItem): Unit = {
             selectExpressionItem.getExpression.accept(new ExpressionVisitorAdapter {
@@ -119,7 +155,7 @@ object Macros {
                 column.name = tableColumn.getColumnName
                 column.table = tableColumn.getTable.getName
                 column.alias = Option(selectExpressionItem.getAlias).map(_.getName).orNull
-                table.columns += column
+                select.columns += column
               }
             })
           }
@@ -127,7 +163,8 @@ object Macros {
 
       }
 
-      println(table)
+      println(select)
+      select.validate()
     }
   }
 
@@ -140,7 +177,7 @@ object Macros {
             val parse = CCJSqlParserUtil.parse(s)
             parse.accept(new StatementVisitorAdapter {
               override def visit(select: net.sf.jsqlparser.statement.select.Select): Unit = {
-                val visitor = new TableExtractor()
+                val visitor = new SelectDefExtractor()
                 select.getSelectBody.accept(visitor)
               }
             })

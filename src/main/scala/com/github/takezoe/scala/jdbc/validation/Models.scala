@@ -4,17 +4,16 @@ import scala.collection.mutable.ListBuffer
 import scala.reflect.macros.blackbox.Context
 
 class TableModel {
-  var name: String = null
-  var alias: String = null
-  var select: SelectModel = null
+  var select: Either[String, SelectModel] = null
+  var alias: Option[String] = None
 
   override def toString(): String = {
-    s"Select(name: $name, alias: $alias, select: $select)"
+    s"Select(select: $select, alias: $alias)"
   }
 }
 
 class SelectModel {
-  var from = new ListBuffer[TableModel]
+  val from = new ListBuffer[TableModel]
   val columns = new ListBuffer[ColumnModel]
   val orderBy = new ListBuffer[ColumnModel]
   val where = new ListBuffer[ColumnModel]
@@ -25,23 +24,24 @@ class SelectModel {
 
   def validate(c: Context): Unit = {
     from.foreach { table =>
-      if(table.select != null){
-        table.select.validate(c)
-      }
+      table.select.right.foreach(_.validate(c))
     }
     (columns ++ where ++ orderBy).foreach { column =>
-      println(column)
-      val table = if (column.table != null){
-        from.find(x => x.name == column.table || x.alias == column.table)
-      } else {
+      val table = column.table.map { t =>
+        from.find(x => x.select == Left(t) || x.alias == Some(t))
+      }.getOrElse {
         from.headOption
       }
+
       table.map { table =>
-        if(table.name != null){
-          // TODO Check with table definition which would be given from user
-        } else {
-          if (!table.select.columns.exists(x => x.name == column.name || x.alias == column.name)) {
-            c.error(c.enclosingPosition, "Column " + column.fullName + " does not exist.")
+        table.select match {
+          case Left(name) => {
+            // TODO Check with table definition which would be given from user
+          }
+          case Right(select) => {
+            if (!select.columns.exists(x => x.name == column.name || x.alias == Some(column.name))) {
+              c.error(c.enclosingPosition, "Column " + column.fullName + " does not exist.")
+            }
           }
         }
       }.getOrElse {
@@ -53,11 +53,11 @@ class SelectModel {
 
 class ColumnModel {
   var name: String = null
-  var table: String = null
-  var alias: String = null
+  var table: Option[String] = None
+  var alias: Option[String] = None
 
   def fullName = {
-    if(table != null) table + "." + name else name
+    table.map(_ + "." + name).getOrElse(name)
   }
 
   override def toString(): String = {

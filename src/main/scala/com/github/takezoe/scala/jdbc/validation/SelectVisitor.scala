@@ -38,8 +38,8 @@ class SelectVisitor(c: Context) extends SelectVisitorAdapter {
             override def visit(tableColumn: Column): Unit = {
               val column = new ColumnModel()
               column.name = tableColumn.getColumnName
-              column.table = tableColumn.getTable.getName
-              column.alias = Option(selectExpressionItem.getAlias).map(_.getName).orNull
+              column.table = Option(tableColumn.getTable.getName)
+              column.alias = Option(selectExpressionItem.getAlias).map(_.getName)
               select.columns += column
             }
           })
@@ -52,7 +52,7 @@ class SelectVisitor(c: Context) extends SelectVisitorAdapter {
       override def visit(column: Column): Unit = {
         val c = new ColumnModel()
         c.name = column.getColumnName
-        c.table = Option(column.getTable).map(_.getName).orNull
+        c.table = Option(column.getTable).map(_.getName)
         select.where += c
       }
     }))
@@ -64,7 +64,7 @@ class SelectVisitor(c: Context) extends SelectVisitorAdapter {
             override def visit(column: Column): Unit = {
               val c = new ColumnModel()
               c.name = column.getColumnName
-              c.table = Option(column.getTable).map(_.getName).orNull
+              c.table = Option(column.getTable).map(_.getName)
               select.orderBy += c
             }
           })
@@ -81,15 +81,15 @@ class SelectVisitor(c: Context) extends SelectVisitorAdapter {
     val table = new TableModel()
 
     override def visit(tableName: Table): Unit = {
-      table.name = tableName.getName
-      table.alias = Option(tableName.getAlias).map(_.getName).orNull
+      table.select = Left(tableName.getName)
+      table.alias = Option(tableName.getAlias).map(_.getName)
     }
 
     override def visit(subSelect: SubSelect): Unit = {
       val visitor = new SelectVisitor(c)
       subSelect.getSelectBody.accept(visitor)
-      table.select = visitor.select
-      table.alias = Option(subSelect.getAlias).map(_.getName).orNull
+      table.select = Right(visitor.select)
+      table.alias = Option(subSelect.getAlias).map(_.getName)
     }
   }
 }

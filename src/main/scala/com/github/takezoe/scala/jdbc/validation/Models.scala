@@ -1,6 +1,7 @@
 package com.github.takezoe.scala.jdbc.validation
 
 import scala.collection.mutable.ListBuffer
+import scala.reflect.macros.blackbox.Context
 
 class TableModel {
   var name: String = null
@@ -22,7 +23,12 @@ class SelectModel {
     s"Select(from: $from, columns: $columns, orderBy; $orderBy, where: $where)"
   }
 
-  def validate() = {
+  def validate(c: Context): Unit = {
+    from.foreach { table =>
+      if(table.select != null){
+        table.select.validate(c)
+      }
+    }
     (columns ++ where ++ orderBy).foreach { column =>
       println(column)
       val table = if (column.table != null){
@@ -35,11 +41,11 @@ class SelectModel {
           // TODO Check with table definition which would be given from user
         } else {
           if (!table.select.columns.exists(x => x.name == column.name || x.alias == column.name)) {
-            println("[ERROR]Column " + column + " does not exist!")
+            c.error(c.enclosingPosition, "[ERROR]Column " + column + " does not exist!")
           }
         }
       }.getOrElse {
-        println("[ERROR]Table " + column.table + " does not exist!")
+        c.error(c.enclosingPosition, "[ERROR]Table " + column.table + " does not exist!")
       }
     }
   }

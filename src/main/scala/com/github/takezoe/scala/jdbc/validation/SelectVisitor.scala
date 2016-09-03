@@ -3,21 +3,21 @@ package com.github.takezoe.scala.jdbc.validation
 import net.sf.jsqlparser.expression.ExpressionVisitorAdapter
 import net.sf.jsqlparser.schema.{Column, Table}
 import net.sf.jsqlparser.statement.select._
-
+import scala.reflect.macros.blackbox.Context
 import scala.collection.JavaConverters._
 
-class SelectVisitor extends SelectVisitorAdapter {
+class SelectVisitor(c: Context) extends SelectVisitorAdapter {
 
   var select = new SelectModel()
 
   override def visit(plainSelect: PlainSelect): Unit = {
     Option(plainSelect.getJoins).map(_.asScala.foreach { join =>
-      val visitor = new FromItemVisitor()
+      val visitor = new FromItemVisitor(c)
       join.getRightItem.accept(visitor)
       select.from += visitor.table
     })
 
-    val visitor = new FromItemVisitor()
+    val visitor = new FromItemVisitor(c)
     plainSelect.getFromItem.accept(visitor)
     select.from += visitor.table
 
@@ -73,10 +73,10 @@ class SelectVisitor extends SelectVisitorAdapter {
     })
 
     println(select)
-    select.validate()
+    select.validate(c)
   }
 
-  class FromItemVisitor extends FromItemVisitorAdapter {
+  class FromItemVisitor(c: Context) extends FromItemVisitorAdapter {
 
     val table = new TableModel()
 
@@ -86,7 +86,7 @@ class SelectVisitor extends SelectVisitorAdapter {
     }
 
     override def visit(subSelect: SubSelect): Unit = {
-      val visitor = new SelectVisitor()
+      val visitor = new SelectVisitor(c)
       subSelect.getSelectBody.accept(visitor)
       table.select = visitor.select
       table.alias = Option(subSelect.getAlias).map(_.getName).orNull

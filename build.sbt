@@ -10,7 +10,8 @@ libraryDependencies ++= Seq(
   "com.github.jsqlparser" % "jsqlparser" % "0.9.6",
   "org.scalamacros" %% "resetallattrs"  % "1.0.0",
   "org.scala-lang" % "scala-reflect"  % scalaVersion.value,
-  "org.scala-lang" % "scala-compiler" % scalaVersion.value % "provided"
+  "org.scala-lang" % "scala-compiler" % scalaVersion.value % "provided",
+  "org.scalatest" %% "scalatest" % "2.2.1" % "test"
 )
 
 publishMavenStyle := true

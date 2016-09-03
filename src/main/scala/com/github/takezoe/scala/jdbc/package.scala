@@ -44,14 +44,13 @@ object Macros {
             val parse = CCJSqlParserUtil.parse(s)
             parse.accept(new StatementVisitorAdapter {
               override def visit(select: net.sf.jsqlparser.statement.select.Select): Unit = {
-                val visitor = new SelectVisitor()
+                val visitor = new SelectVisitor(c)
                 select.getSelectBody.accept(visitor)
               }
             })
           } catch {
-            case e: JSQLParserException =>
-              c.error(sql.tree.pos, e.getCause.getMessage)
-s          }
+            case e: JSQLParserException => c.error(c.enclosingPosition, e.getCause.getMessage)
+          }
         }
       }
     }

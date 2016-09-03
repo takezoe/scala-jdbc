@@ -41,11 +41,11 @@ class SelectModel {
           // TODO Check with table definition which would be given from user
         } else {
           if (!table.select.columns.exists(x => x.name == column.name || x.alias == column.name)) {
-            c.error(c.enclosingPosition, "[ERROR]Column " + column + " does not exist!")
+            c.error(c.enclosingPosition, "Column " + column.fullName + " does not exist.")
           }
         }
       }.getOrElse {
-        c.error(c.enclosingPosition, "[ERROR]Table " + column.table + " does not exist!")
+        c.error(c.enclosingPosition, "Table " + column.table + " does not exist.")
       }
     }
   }
@@ -55,6 +55,10 @@ class ColumnModel {
   var name: String = null
   var table: String = null
   var alias: String = null
+
+  def fullName = {
+    if(table != null) table + "." + name else name
+  }
 
   override def toString(): String = {
     s"Column(table: $table, name: $name, alias: $alias)"

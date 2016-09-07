@@ -17,6 +17,7 @@ class SelectModel {
   val columns = new ListBuffer[ColumnModel]
   val orderBy = new ListBuffer[ColumnModel]
   val where = new ListBuffer[ColumnModel]
+  val others = new ListBuffer[SelectModel]
 
   override def toString(): String = {
     s"Select(from: $from, columns: $columns, orderBy; $orderBy, where: $where)"
@@ -48,6 +49,8 @@ class SelectModel {
         c.error(c.enclosingPosition, "Table " + column.table + " does not exist.")
       }
     }
+
+    others.foreach(_.validate(c))
   }
 }
 

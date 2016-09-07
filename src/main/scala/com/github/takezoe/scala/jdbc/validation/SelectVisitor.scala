@@ -55,6 +55,13 @@ class SelectVisitor(c: Context) extends SelectVisitorAdapter {
         c.table = Option(column.getTable).map(_.getName)
         select.where += c
       }
+
+      override def visit(subSelect: SubSelect): Unit = {
+        val visitor = new SelectVisitor(c)
+        subSelect.getSelectBody.accept(visitor)
+        select.others += visitor.select
+
+      }
     }))
     Option(plainSelect.getOrderByElements).foreach(_.asScala.foreach { orderBy =>
       println("OrderBy: " + orderBy)

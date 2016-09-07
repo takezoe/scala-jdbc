@@ -79,7 +79,6 @@ class SelectVisitor(c: Context) extends SelectVisitorAdapter {
       })
     })
 
-    println(select)
     select.validate(c)
   }
 

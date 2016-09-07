@@ -53,6 +53,15 @@ object Macros {
           }
         }
       }
+      case Apply(x) => {
+        x._1 match {
+          case Select((tree, name)) => {
+            println(tree)
+            println(name)
+            "OK!!"
+          }
+        }
+      }
     }
     c.Expr[String](q"$sql")
   }

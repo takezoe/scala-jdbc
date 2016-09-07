@@ -33,8 +33,8 @@ class SelectModel {
         from.headOption
       }
 
-      table.map { table =>
-        table.select match {
+      table.map { t =>
+        t.select match {
           case Left(name) => {
             // TODO Check with table definition which would be given from user
           }

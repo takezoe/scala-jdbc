@@ -42,10 +42,14 @@ object Macros {
           val Apply(fun, _) = reify(new SqlTemplate("")).tree
           c.Expr[com.github.takezoe.scala.jdbc.SqlTemplate](Apply.apply(fun, Literal(x) :: Nil))
       }
-      case Apply(Select(Apply(Select(Select((ident, context)), _), trees), _), args) => {
-        val sql = trees.collect { case Literal(x) if x.value.isInstanceOf[String] =>
-          x.value.asInstanceOf[String]
-        }.mkString("?")
+      case Apply(Select(Apply(Select(Select((_, _)), _), trees), _), args) => {
+        val sql = trees.collect { case Literal(x) => x.value.asInstanceOf[String] }.mkString("?")
+        validateSql(sql, c)
+        val Apply(fun, _) = reify(new SqlTemplate("")).tree
+        c.Expr[SqlTemplate](Apply.apply(fun, Literal(Constant(sql)) :: args))
+      }
+      case Select(Apply(_, List(Apply(Select(Apply(Select(Select((_, _)), _), trees), _), args))), TermName("stripMargin")) => {
+        val sql = trees.collect { case Literal(x) => x.value.asInstanceOf[String] }.mkString("?").stripMargin
         validateSql(sql, c)
         val Apply(fun, _) = reify(new SqlTemplate("")).tree
         c.Expr[SqlTemplate](Apply.apply(fun, Literal(Constant(sql)) :: args))

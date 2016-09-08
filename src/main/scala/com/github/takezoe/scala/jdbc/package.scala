@@ -70,7 +70,7 @@ object Macros {
 
   private def validateSql(sql: String, c: Context): Unit = {
     val file = File("schema.json")
-    val schema = if(file.exists){
+    val schema: Map[String, TableDef] = if(file.exists){
       val json = file.contentAsString
       val schema = mapper.readValue(json, classOf[SchemaDef])
       schema.tables.map { t => t.name -> t }.toMap
@@ -83,6 +83,8 @@ object Macros {
         override def visit(select: net.sf.jsqlparser.statement.select.Select): Unit = {
           val visitor = new SelectVisitor(c)
           select.getSelectBody.accept(visitor)
+
+          visitor.select.validate(c, schema)
         }
       })
     } catch {

@@ -8,6 +8,9 @@
         },
         {
           "name": "USER_NAME"
+        },
+        {
+          "name": "DEPT_ID"
         }
       ]
     },
@@ -32,6 +35,15 @@
           "name": "DEPT_NAME"
         }
       ]
+    },
+    {
+      "name": "DEPT_GROUP",
+      "columns": [
+        {
+          "name": "DEPT_ID"
+        }
+      ]
     }
+
   ]
 }

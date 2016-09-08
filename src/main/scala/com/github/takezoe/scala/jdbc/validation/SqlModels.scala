@@ -23,9 +23,9 @@ class SelectModel {
     s"Select(from: $from, columns: $columns, orderBy; $orderBy, where: $where)"
   }
 
-  def validate(c: Context): Unit = {
+  def validate(c: Context, schema: Map[String, TableDef]): Unit = {
     from.foreach { table =>
-      table.select.right.foreach(_.validate(c))
+      table.select.right.foreach(_.validate(c, schema))
     }
     (columns ++ where ++ orderBy).foreach { column =>
       val table = column.table.map { t =>
@@ -37,10 +37,15 @@ class SelectModel {
       table.map { t =>
         t.select match {
           case Left(name) => {
-            // TODO Check with table definition which would be given from user
+            schema.get(name) match {
+              case Some(t) => if(!t.columns.exists(_.name == column.name)){
+                c.error(c.enclosingPosition, "**Column " + column.fullName + " does not exist.")
+              }
+              case None => c.error(c.enclosingPosition, "Table " + name + " does not exist.")
+            }
           }
           case Right(select) => {
-            if (!select.columns.exists(x => x.name == column.name || x.alias == Some(column.name))) {
+            if (!select.columns.exists { x => x.name == column.name || x.alias == Some(column.name) }) {
               c.error(c.enclosingPosition, "Column " + column.fullName + " does not exist.")
             }
           }
@@ -50,7 +55,7 @@ class SelectModel {
       }
     }
 
-    others.foreach(_.validate(c))
+    others.foreach(_.validate(c, schema))
   }
 }
 

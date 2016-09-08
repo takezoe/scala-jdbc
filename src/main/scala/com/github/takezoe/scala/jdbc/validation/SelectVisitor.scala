@@ -78,8 +78,6 @@ class SelectVisitor(c: Context) extends SelectVisitorAdapter {
         }
       })
     })
-
-    select.validate(c)
   }
 
   class FromItemVisitor(c: Context) extends FromItemVisitorAdapter {

@@ -39,31 +39,31 @@ object Macros {
     import c.universe._
     sql.tree match {
       case Literal(x) => x.value match {
-        case s: String => {
-          try {
-            val parse = CCJSqlParserUtil.parse(s)
-            parse.accept(new StatementVisitorAdapter {
-              override def visit(select: net.sf.jsqlparser.statement.select.Select): Unit = {
-                val visitor = new SelectVisitor(c)
-                select.getSelectBody.accept(visitor)
-              }
-            })
-          } catch {
-            case e: JSQLParserException => c.error(c.enclosingPosition, e.getCause.getMessage)
-          }
-        }
+        case sql: String => validateSql(sql, c)
       }
-      case Apply(x) => {
-        x._1 match {
-          case Select((tree, name)) => {
-            println(tree)
-            println(name)
-            "OK!!"
-          }
-        }
+      case Apply(Select(a@Apply(Select(Select((ident, context)), _), trees), _), _) => {
+        val sql = trees.collect { case Literal(x) if x.value.isInstanceOf[String] =>
+          x.value.asInstanceOf[String]
+        }.mkString("?")
+        validateSql(sql, c)
       }
     }
     c.Expr[String](q"$sql")
+  }
+
+  private def validateSql(sql: String, c: Context): Unit = {
+    println(sql)
+    try {
+      val parse = CCJSqlParserUtil.parse(sql)
+      parse.accept(new StatementVisitorAdapter {
+        override def visit(select: net.sf.jsqlparser.statement.select.Select): Unit = {
+          val visitor = new SelectVisitor(c)
+          select.getSelectBody.accept(visitor)
+        }
+      })
+    } catch {
+      case e: JSQLParserException => c.error(c.enclosingPosition, e.getCause.getMessage)
+    }
   }
 
 }

@@ -7,6 +7,7 @@ class SqlValidationSpec extends FunSuite {
 
   test("macro test"){
     val companyId = 1
+    val companyName = "xxx"
 
     val s = sqlc(s"""
       SELECT
@@ -18,12 +19,13 @@ class SqlValidationSpec extends FunSuite {
         USER A,
         (SELECT DEPT_ID, DEPT_NAME FROM DEPT) C
       INNER JOIN COMPANY B ON A.COMPANY_ID = B.COMPANY_ID
-      WHERE B.COMPANY_ID = ${companyId} AND C.DEPT_ID = A.DEPT_ID AND C.DEPT_ID IN (SELECT DEPT_ID FROM DEPT_GROUP)
+      WHERE
+        B.COMPANY_ID   = ${companyId}   AND
+        B.COMPANY_NAME = ${companyName} AND
+        C.DEPT_ID      = A.DEPT_ID      AND
+        C.DEPT_ID IN (SELECT DEPT_ID FROM DEPT_GROUP)
       ORDER BY A.USER_ID
     """)
-
-    println("========")
-    println(s)
   }
 
 }

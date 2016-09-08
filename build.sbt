@@ -9,6 +9,8 @@ scalaVersion := "2.11.8"
 libraryDependencies ++= Seq(
   "com.github.jsqlparser" % "jsqlparser" % "0.9.6",
   "org.scalamacros" %% "resetallattrs"  % "1.0.0",
+  "com.fasterxml.jackson.module" %% "jackson-module-scala"  % "2.7.2",
+  "com.github.pathikrit" %% "better-files" % "2.15.0",
   "org.scala-lang" % "scala-reflect"  % scalaVersion.value,
   "org.scala-lang" % "scala-compiler" % scalaVersion.value % "provided",
   "org.scalatest" %% "scalatest" % "2.2.1" % "test"

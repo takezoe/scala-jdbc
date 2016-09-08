@@ -1,5 +1,7 @@
 package com.github.takezoe.scala
 
+import com.fasterxml.jackson.databind.{DeserializationFeature, ObjectMapper}
+import com.fasterxml.jackson.module.scala.DefaultScalaModule
 import com.github.takezoe.scala.jdbc.SqlTemplate
 import net.sf.jsqlparser.JSQLParserException
 import net.sf.jsqlparser.parser.CCJSqlParserUtil
@@ -8,6 +10,10 @@ import net.sf.jsqlparser.statement.StatementVisitorAdapter
 import scala.language.experimental.macros
 import scala.reflect.macros.blackbox.Context
 import com.github.takezoe.scala.jdbc.validation._
+
+import scala.reflect.ClassTag
+import better.files._
+import java.io.{File => JFile}
 
 package object jdbc {
 
@@ -34,6 +40,11 @@ package object jdbc {
 
 object Macros {
 
+  private val mapper = new ObjectMapper()
+  mapper.enable(DeserializationFeature.UNWRAP_SINGLE_VALUE_ARRAYS)
+  mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
+  mapper.registerModule(DefaultScalaModule)
+
   def sqlMacro(c: Context)(sql: c.Expr[String]): c.Expr[com.github.takezoe.scala.jdbc.SqlTemplate] = {
     import c.universe._
     sql.tree match {
@@ -58,6 +69,14 @@ object Macros {
   }
 
   private def validateSql(sql: String, c: Context): Unit = {
+    val file = File("schema.json")
+    val schema = if(file.exists){
+      val json = file.contentAsString
+      val schema = mapper.readValue(json, classOf[SchemaDef])
+      schema.tables.map { t => t.name -> t }.toMap
+    } else {
+      Map.empty
+    }
     try {
       val parse = CCJSqlParserUtil.parse(sql)
       parse.accept(new StatementVisitorAdapter {

@@ -26,6 +26,8 @@ class SqlValidationSpec extends FunSuite {
         C.DEPT_ID IN (SELECT DEPT_ID FROM DEPT_GROUP)
       ORDER BY A.USER_ID
     """)
+
+    println(s)
   }
 
 }

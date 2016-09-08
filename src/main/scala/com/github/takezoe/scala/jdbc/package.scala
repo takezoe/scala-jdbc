@@ -1,5 +1,6 @@
 package com.github.takezoe.scala
 
+import com.github.takezoe.scala.jdbc.SqlTemplate
 import net.sf.jsqlparser.JSQLParserException
 import net.sf.jsqlparser.parser.CCJSqlParserUtil
 import net.sf.jsqlparser.statement.StatementVisitorAdapter
@@ -21,38 +22,38 @@ package object jdbc {
   implicit class SqlStringInterpolation(val sc: StringContext) extends AnyVal {
     def sql(args: Any*): SqlTemplate = {
       val sql = sc.parts.mkString
-      println(sql)
-      val parse = CCJSqlParserUtil.parse(sql)
       SqlTemplate(sql, args.toSeq)
     }
   }
 
   case class SqlTemplate(sql: String, params: Any*)
 
-  def sqlc(sql: String): String = macro Macros.sqlMacro
+  def sqlc(sql: String): com.github.takezoe.scala.jdbc.SqlTemplate = macro Macros.sqlMacro
 
 }
 
 object Macros {
 
-  def sqlMacro(c: Context)(sql: c.Expr[String]): c.Expr[String] = {
+  def sqlMacro(c: Context)(sql: c.Expr[String]): c.Expr[com.github.takezoe.scala.jdbc.SqlTemplate] = {
     import c.universe._
     sql.tree match {
       case Literal(x) => x.value match {
         case sql: String => validateSql(sql, c)
+          val Apply(fun, _) = reify(new SqlTemplate("")).tree
+          c.Expr[com.github.takezoe.scala.jdbc.SqlTemplate](Apply.apply(fun, Literal(x) :: Nil))
       }
-      case Apply(Select(a@Apply(Select(Select((ident, context)), _), trees), _), _) => {
+      case Apply(Select(Apply(Select(Select((ident, context)), _), trees), _), args) => {
         val sql = trees.collect { case Literal(x) if x.value.isInstanceOf[String] =>
           x.value.asInstanceOf[String]
         }.mkString("?")
         validateSql(sql, c)
+        val Apply(fun, _) = reify(new SqlTemplate("")).tree
+        c.Expr[SqlTemplate](Apply.apply(fun, Literal(Constant(sql)) :: args))
       }
     }
-    c.Expr[String](q"$sql")
   }
 
   private def validateSql(sql: String, c: Context): Unit = {
-    println(sql)
     try {
       val parse = CCJSqlParserUtil.parse(sql)
       parse.accept(new StatementVisitorAdapter {

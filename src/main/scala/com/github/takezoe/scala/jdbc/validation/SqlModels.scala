@@ -20,7 +20,7 @@ class SelectModel {
   val others = new ListBuffer[SelectModel]
 
   override def toString(): String = {
-    s"Select(from: $from, columns: $columns, orderBy; $orderBy, where: $where)"
+    s"Select(from: $from, columns: $columns, orderBy; $orderBy, where: $where, others: $others)"
   }
 
   def validate(c: Context, schema: Map[String, TableDef]): Unit = {

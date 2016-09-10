@@ -35,7 +35,12 @@ class SqlValidationSpec extends FunSuite {
 
     sqlc(
       """
-        |UPDATE USER SET USER_ID = 1, USER_NAME = 'takezoe' WHERE USER_ID2 = 2
+        |UPDATE USER SET USER_ID = 1, USER_NAME = 'takezoe' WHERE USER_ID = 2
+      """.stripMargin)
+
+    sqlc(
+      """
+        |DELETE USER WHERE USER_ID IN (SELECT DEPT_ID FROM DEPT WHERE DEPT_NAME = 'dev')
       """.stripMargin)
   }
 

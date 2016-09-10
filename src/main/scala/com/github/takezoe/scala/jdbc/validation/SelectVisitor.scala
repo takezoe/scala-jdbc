@@ -52,7 +52,7 @@ class SelectVisitor(c: Context) extends SelectVisitorAdapter {
       override def visit(column: Column): Unit = {
         val c = new ColumnModel()
         c.name = column.getColumnName
-        c.table = Option(column.getTable).map(_.getName)
+        c.table = Option(column.getTable).flatMap(t => Option(t.getName))
         select.where += c
       }
 

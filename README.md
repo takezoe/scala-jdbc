@@ -113,7 +113,14 @@ Here is an example of `schema.json`:
 }
 ```
 
-However `sqlc` macro is still experimental feature.
+However `sqlc` macro is still experimental feature, so you have to use SNAPSHOT version of scala-jdbc to use it:
+
+```scala
+resolvers += "Sonatype OSS Snapshots" at "https://oss.sonatype.org/content/repositories/snapshots"
+
+libraryDependencies += "com.github.takezoe" %% "scala-jdbc" % "1.0.3-SNAPSHOT"
+```
+
 If you get invalid validation results, please report them to [issues](https://github.com/takezoe/scala-jdbc/issues).
 
 

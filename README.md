@@ -113,4 +113,7 @@ Here is an example of `schema.json`:
 }
 ```
 
+However `sqlc` macro is still experimental feature.
+If you get invalid validation results, please report them to [issues](https://github.com/takezoe/scala-jdbc/issues).
+
 

@@ -1,0 +1,49 @@
+{
+  "tables":[
+    {
+      "name": "USER",
+      "columns": [
+        {
+          "name": "USER_ID"
+        },
+        {
+          "name": "USER_NAME"
+        },
+        {
+          "name": "DEPT_ID"
+        }
+      ]
+    },
+    {
+      "name": "COMPANY",
+      "columns": [
+        {
+          "name": "COMPANY_ID"
+        },
+        {
+          "name": "COMPANY_NAME"
+        }
+      ]
+    },
+    {
+      "name": "DEPT",
+      "columns": [
+        {
+          "name": "DEPT_ID"
+        },
+        {
+          "name": "DEPT_NAME"
+        }
+      ]
+    },
+    {
+      "name": "DEPT_GROUP",
+      "columns": [
+        {
+          "name": "DEPT_ID"
+        }
+      ]
+    }
+
+  ]
+}

@@ -74,3 +74,46 @@ DB.autoClose(conn) { db =>
   }
 }
 ```
+
+## SQL Validation (Experimental)
+
+scala-jdbc provides `sqlc` macro that validates a given SQL. You can use it instead of sql string interpolation.
+
+```scala
+db.selectFirst(sqlc("SELECT * FROM USERS WHERE USER_ID = $userId")){ rs =>
+  (rs.getInt("USER_ID"), rs.getString("USER_NAME"))
+}
+```
+
+When a given SQL is invalid, this macro reports error in compile time.
+
+In default, this macro checks only sql syntax.
+It's also possible to check existence of tables and columns by database schema definition by defining `schema.json` in the current directory.
+Here is an example of `schema.json`:
+
+```javascript
+{
+  "tables":[
+    {
+      "name": "USER",
+      "columns": [
+        { "name": "USER_ID" },
+        { "name": "USER_NAME" },
+        { "name": "DEPT_ID" }
+      ]
+    },
+    {
+      "name": "COMPANY",
+      "columns": [
+        { "name": "COMPANY_ID" },
+        { "name": "COMPANY_NAME" }
+      ]
+    }
+  ]
+}
+```
+
+However `sqlc` macro is still experimental feature.
+If you get invalid validation results, please report them to [issues](https://github.com/takezoe/scala-jdbc/issues).
+
+

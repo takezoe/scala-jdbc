@@ -11,7 +11,9 @@ class InsertValidator(c: blackbox.Context, insert: Insert, schema: Map[String, T
     val tableName = insert.getTable.getName
 
     schema.get(tableName) match {
-      case None => c.error(c.enclosingPosition, "Table " + tableName + " does not exist.")
+      case None => if(schema.nonEmpty){
+        c.error(c.enclosingPosition, "Table " + tableName + " does not exist.")
+      }
       case Some(tableDef) => insert.getColumns.asScala.foreach { column =>
         if(!tableDef.columns.exists(_.name == column.getColumnName)){
           c.error(c.enclosingPosition, "Column " + column.getColumnName + " does not exist in " + tableDef.name + ".")

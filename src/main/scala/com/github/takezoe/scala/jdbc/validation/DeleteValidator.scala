@@ -13,7 +13,9 @@ class DeleteValidator(c: blackbox.Context, delete: Delete, schema: Map[String, T
     val tableName = delete.getTable.getName
 
     schema.get(tableName) match {
-      case None => c.error(c.enclosingPosition, "Table " + tableName + " does not exist.")
+      case None => if(schema.nonEmpty){
+        c.error(c.enclosingPosition, "Table " + tableName + " does not exist.")
+      }
       case Some(tableDef) => {
         val select = new SelectModel()
         val tableModel = new TableModel()

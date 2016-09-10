@@ -64,7 +64,6 @@ class SelectVisitor(c: Context) extends SelectVisitorAdapter {
       }
     }))
     Option(plainSelect.getOrderByElements).foreach(_.asScala.foreach { orderBy =>
-      println("OrderBy: " + orderBy)
       orderBy.accept(new OrderByVisitor {
         override def visit(orderBy: OrderByElement): Unit = {
           orderBy.getExpression.accept(new ExpressionVisitorAdapter(){

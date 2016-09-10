@@ -9,7 +9,7 @@ class SqlValidationSpec extends FunSuite {
     val companyId = 1
     val companyName = "xxx"
 
-    val s = sqlc(s"""
+    sqlc(s"""
       |SELECT
       |  A.USER_ID,
       |  A.USER_NAME,
@@ -27,7 +27,16 @@ class SqlValidationSpec extends FunSuite {
       |ORDER BY A.USER_ID
     """.stripMargin)
 
-    println(s)
+
+    sqlc(
+      """
+        |INSERT INTO USER (USER_ID, USER_NAME) VALUES (1, 'takezoe')
+      """.stripMargin)
+
+    sqlc(
+      """
+        |UPDATE USER SET USER_ID = 1, USER_NAME = 'takezoe' WHERE USER_ID2 = 2
+      """.stripMargin)
   }
 
 }

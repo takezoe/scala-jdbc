@@ -9,11 +9,15 @@ import net.sf.jsqlparser.statement.StatementVisitorAdapter
 
 import scala.language.experimental.macros
 import scala.reflect.macros.blackbox.Context
+import scala.collection.JavaConverters._
 import com.github.takezoe.scala.jdbc.validation._
-
-import scala.reflect.ClassTag
 import better.files._
-import java.io.{File => JFile}
+import net.sf.jsqlparser.expression.ExpressionVisitorAdapter
+import net.sf.jsqlparser.schema.Column
+import net.sf.jsqlparser.statement.delete.Delete
+import net.sf.jsqlparser.statement.insert.Insert
+import net.sf.jsqlparser.statement.select.SubSelect
+import net.sf.jsqlparser.statement.update.Update
 
 package object jdbc {
 
@@ -59,6 +63,15 @@ object Macros {
         val Apply(fun, _) = reify(new SqlTemplate("")).tree
         c.Expr[SqlTemplate](Apply.apply(fun, Literal(Constant(sql)) :: args))
       }
+      case Select(Apply(Select(a, b), List(Literal(x))), TermName("stripMargin")) => {
+        x.value match {
+          case s: String =>
+            val sql = s.stripMargin
+            validateSql(sql, c)
+            val Apply(fun, _) = reify(new SqlTemplate("")).tree
+            c.Expr[SqlTemplate](Apply.apply(fun, Literal(Constant(sql)) :: Nil))
+        }
+      }
       case Select(Apply(_, List(Apply(Select(Apply(Select(Select((_, _)), _), trees), _), args))), TermName("stripMargin")) => {
         val sql = trees.collect { case Literal(x) => x.value.asInstanceOf[String] }.mkString("?").stripMargin
         validateSql(sql, c)
@@ -86,6 +99,73 @@ object Macros {
 
           visitor.select.validate(c, schema)
         }
+
+        override def visit(insert: Insert): Unit = {
+          val tableName = insert.getTable.getName
+          schema.get(tableName) match {
+            case None => c.error(c.enclosingPosition, "Table " + tableName + " does not exist.")
+            case Some(tableDef) => insert.getColumns.asScala.foreach { column =>
+              if(!tableDef.columns.exists(_.name == column.getColumnName)){
+                c.error(c.enclosingPosition, "Column " + column.getColumnName + " does not exist in " + tableDef.name + ".")
+              }
+            }
+          }
+
+          if(insert.getSelect != null){
+            val visitor = new SelectVisitor(c)
+            insert.getSelect.getSelectBody.accept(visitor)
+            visitor.select.validate(c, schema)
+          }
+        }
+
+        override def visit(update: Update): Unit = {
+          val tableNames = update.getTables.asScala.map(t => (t.getName, Option(t.getAlias).map(_.getName)))
+          tableNames.foreach { case (tableName, _) =>
+            if(schema.get(tableName).isEmpty){
+              c.error(c.enclosingPosition, "Table " + tableName + " does not exist.")
+            }
+          }
+
+          val tableName = update.getTables.asScala.head.getName
+
+          update.getColumns.asScala.foreach { column =>
+            schema.get(tableName) match {
+              case None => c.error(c.enclosingPosition, "Table " + tableName + " does not exist.")
+              case Some(tableDef) =>
+                if(!tableDef.columns.exists(_.name == column.getColumnName)){
+                  c.error(c.enclosingPosition, "Column " + column.getColumnName + " does not exist in " + tableDef.name + ".")
+                }
+            }
+          }
+
+          val select = new SelectModel()
+          val tableModel = new TableModel()
+          tableModel.select = Left(tableName)
+          select.from += tableModel
+
+          update.getWhere.accept(new ExpressionVisitorAdapter {
+            override def visit(column: Column): Unit = {
+              val c = new ColumnModel()
+              c.name = column.getColumnName
+              c.table = Option(tableName)
+              select.where += c
+            }
+
+            override def visit(subSelect: SubSelect): Unit = {
+              val visitor = new SelectVisitor(c)
+              subSelect.getSelectBody.accept(visitor)
+              select.others += visitor.select
+            }
+          })
+
+          select.validate(c, schema)
+        }
+
+        override def visit(delete: Delete): Unit = {
+
+
+        }
+
       })
     } catch {
       case e: JSQLParserException => c.error(c.enclosingPosition, e.getCause.getMessage)

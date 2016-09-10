@@ -39,7 +39,7 @@ class SelectModel {
           case Left(name) => {
             schema.get(name) match {
               case Some(t) => if(!t.columns.exists(_.name == column.name)){
-                c.error(c.enclosingPosition, "**Column " + column.fullName + " does not exist.")
+                c.error(c.enclosingPosition, "Column " + column.fullName + " does not exist.")
               }
               case None => c.error(c.enclosingPosition, "Table " + name + " does not exist.")
             }

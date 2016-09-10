@@ -1,19 +1,10 @@
 package com.github.takezoe.scala
 
-import com.fasterxml.jackson.databind.{DeserializationFeature, ObjectMapper}
-import com.fasterxml.jackson.module.scala.DefaultScalaModule
 import com.github.takezoe.scala.jdbc.SqlTemplate
-import net.sf.jsqlparser.JSQLParserException
-import net.sf.jsqlparser.parser.CCJSqlParserUtil
-import net.sf.jsqlparser.statement.StatementVisitorAdapter
 
 import scala.language.experimental.macros
 import scala.reflect.macros.blackbox.Context
 import com.github.takezoe.scala.jdbc.validation._
-import better.files._
-import net.sf.jsqlparser.statement.delete.Delete
-import net.sf.jsqlparser.statement.insert.Insert
-import net.sf.jsqlparser.statement.update.Update
 
 package object jdbc {
 
@@ -34,28 +25,27 @@ package object jdbc {
 
   case class SqlTemplate(sql: String, params: Any*)
 
-  def sqlc(sql: String): com.github.takezoe.scala.jdbc.SqlTemplate = macro Macros.sqlMacro
+  /**
+   * Macro version of sql string interpolation.
+   * This macro validates the given sql in compile time and returns SqlTemplate as same as string interpolation.
+   */
+  def sqlc(sql: String): com.github.takezoe.scala.jdbc.SqlTemplate = macro Macros.validateSqlMacro
 
 }
 
 object Macros {
 
-  private val mapper = new ObjectMapper()
-  mapper.enable(DeserializationFeature.UNWRAP_SINGLE_VALUE_ARRAYS)
-  mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
-  mapper.registerModule(DefaultScalaModule)
-
-  def sqlMacro(c: Context)(sql: c.Expr[String]): c.Expr[com.github.takezoe.scala.jdbc.SqlTemplate] = {
+  def validateSqlMacro(c: Context)(sql: c.Expr[String]): c.Expr[com.github.takezoe.scala.jdbc.SqlTemplate] = {
     import c.universe._
     sql.tree match {
       case Literal(x) => x.value match {
-        case sql: String => validateSql(sql, c)
+        case sql: String => SqlValidator.validateSql(sql, c)
           val Apply(fun, _) = reify(new SqlTemplate("")).tree
           c.Expr[com.github.takezoe.scala.jdbc.SqlTemplate](Apply.apply(fun, Literal(x) :: Nil))
       }
       case Apply(Select(Apply(Select(Select((_, _)), _), trees), _), args) => {
         val sql = trees.collect { case Literal(x) => x.value.asInstanceOf[String] }.mkString("?")
-        validateSql(sql, c)
+        SqlValidator.validateSql(sql, c)
         val Apply(fun, _) = reify(new SqlTemplate("")).tree
         c.Expr[SqlTemplate](Apply.apply(fun, Literal(Constant(sql)) :: args))
       }
@@ -63,47 +53,17 @@ object Macros {
         x.value match {
           case s: String =>
             val sql = s.stripMargin
-            validateSql(sql, c)
+            SqlValidator.validateSql(sql, c)
             val Apply(fun, _) = reify(new SqlTemplate("")).tree
             c.Expr[SqlTemplate](Apply.apply(fun, Literal(Constant(sql)) :: Nil))
         }
       }
       case Select(Apply(_, List(Apply(Select(Apply(Select(Select((_, _)), _), trees), _), args))), TermName("stripMargin")) => {
         val sql = trees.collect { case Literal(x) => x.value.asInstanceOf[String] }.mkString("?").stripMargin
-        validateSql(sql, c)
+        SqlValidator.validateSql(sql, c)
         val Apply(fun, _) = reify(new SqlTemplate("")).tree
         c.Expr[SqlTemplate](Apply.apply(fun, Literal(Constant(sql)) :: args))
       }
-    }
-  }
-
-  private def validateSql(sql: String, c: Context): Unit = {
-    val file = File("schema.json")
-    val schema: Map[String, TableDef] = if(file.exists){
-      val json = file.contentAsString
-      val schema = mapper.readValue(json, classOf[SchemaDef])
-      schema.tables.map { t => t.name -> t }.toMap
-    } else {
-      Map.empty
-    }
-    try {
-      val parse = CCJSqlParserUtil.parse(sql)
-      parse.accept(new StatementVisitorAdapter {
-        override def visit(select: net.sf.jsqlparser.statement.select.Select): Unit = {
-          new SelectValidator(c, select, schema).validate()
-        }
-        override def visit(insert: Insert): Unit = {
-          new InsertValidator(c, insert, schema).validate()
-        }
-        override def visit(update: Update): Unit = {
-          new UpdateValidator(c, update, schema).validate()
-        }
-        override def visit(delete: Delete): Unit = {
-          new DeleteValidator(c, delete, schema).validate()
-        }
-      })
-    } catch {
-      case e: JSQLParserException => c.error(c.enclosingPosition, e.getCause.getMessage)
     }
   }
 

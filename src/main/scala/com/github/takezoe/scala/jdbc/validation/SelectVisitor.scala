@@ -14,22 +14,14 @@ class SelectVisitor(c: Context) extends SelectVisitorAdapter {
 
   override def visit(plainSelect: PlainSelect): Unit = {
     Option(plainSelect.getJoins).map(_.asScala.foreach { join =>
-      val visitor = new FromItemVisitor(c)
+      val visitor = new FromItemVisitor()
       join.getRightItem.accept(visitor)
       select.from += visitor.table
 
-      Option(join.getOnExpression).foreach(_.accept(new ExpressionVisitorAdapter(){
-        override def visit(tableColumn: Column): Unit = {
-          val column = new ColumnModel()
-          column.name = tableColumn.getColumnName
-          column.table = Option(tableColumn.getTable.getName)
-          column.alias = None
-          select.columns += column
-        }
-      }))
+      Option(join.getOnExpression).foreach(_.accept(new ExpressionVisitor()))
     })
 
-    val visitor = new FromItemVisitor(c)
+    val visitor = new FromItemVisitor()
     plainSelect.getFromItem.accept(visitor)
     select.from += visitor.table
 
@@ -60,21 +52,8 @@ class SelectVisitor(c: Context) extends SelectVisitorAdapter {
 
     }
 
-    Option(plainSelect.getWhere).foreach(_.accept(new ExpressionVisitorAdapter {
-      override def visit(column: Column): Unit = {
-        val c = new ColumnModel()
-        c.name = column.getColumnName
-        c.table = Option(column.getTable).flatMap(t => Option(t.getName))
-        select.where += c
-      }
+    Option(plainSelect.getWhere).foreach(_.accept(new ExpressionVisitor()))
 
-      override def visit(subSelect: SubSelect): Unit = {
-        val visitor = new SelectVisitor(c)
-        subSelect.getSelectBody.accept(visitor)
-        select.others += visitor.select
-
-      }
-    }))
     Option(plainSelect.getOrderByElements).foreach(_.asScala.foreach { orderBy =>
       orderBy.accept(new OrderByVisitor {
         override def visit(orderBy: OrderByElement): Unit = {
@@ -91,7 +70,22 @@ class SelectVisitor(c: Context) extends SelectVisitorAdapter {
     })
   }
 
-  class FromItemVisitor(c: Context) extends FromItemVisitorAdapter {
+  class ExpressionVisitor extends ExpressionVisitorAdapter {
+    override def visit(tableColumn: Column): Unit = {
+      val column = new ColumnModel()
+      column.name = tableColumn.getColumnName
+      column.table = Option(tableColumn.getTable.getName)
+      select.columns += column
+    }
+
+    override def visit(subSelect: SubSelect): Unit = {
+      val visitor = new SelectVisitor(c)
+      subSelect.getSelectBody.accept(visitor)
+      select.others += visitor.select
+    }
+  }
+
+  class FromItemVisitor extends FromItemVisitorAdapter {
 
     val table = new TableModel()
 

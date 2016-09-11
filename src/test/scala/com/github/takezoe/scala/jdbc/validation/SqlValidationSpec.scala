@@ -18,7 +18,7 @@ class SqlValidationSpec extends FunSuite {
       |FROM
       |  USER A,
       |  (SELECT DEPT_ID, DEPT_NAME FROM DEPT) C
-      |INNER JOIN COMPANY B ON A.COMPANY_ID = B.COMPANY_ID
+      |INNER JOIN COMPANY B ON A.COMPANY_ID = B.COMPANY_ID AND A.DEPT_ID IN (SELECT DEPT_ID FROM DEPT)
       |WHERE
       |  B.COMPANY_ID   = ${companyId}   AND
       |  B.COMPANY_NAME = ${companyName} AND

@@ -10,6 +10,9 @@
           "name": "USER_NAME"
         },
         {
+          "name": "COMPANY_ID"
+        },
+        {
           "name": "DEPT_ID"
         }
       ]

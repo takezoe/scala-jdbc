@@ -17,6 +17,16 @@ class SelectVisitor(c: Context) extends SelectVisitorAdapter {
       val visitor = new FromItemVisitor(c)
       join.getRightItem.accept(visitor)
       select.from += visitor.table
+
+      Option(join.getOnExpression).foreach(_.accept(new ExpressionVisitorAdapter(){
+        override def visit(tableColumn: Column): Unit = {
+          val column = new ColumnModel()
+          column.name = tableColumn.getColumnName
+          column.table = Option(tableColumn.getTable.getName)
+          column.alias = None
+          select.columns += column
+        }
+      }))
     })
 
     val visitor = new FromItemVisitor(c)

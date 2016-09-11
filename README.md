@@ -99,7 +99,7 @@ Here is an example of `schema.json`:
       "columns": [
         { "name": "USER_ID" },
         { "name": "USER_NAME" },
-        { "name": "DEPT_ID" }
+        { "name": "COMPANY_ID" }
       ]
     },
     {

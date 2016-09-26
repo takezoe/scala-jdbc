@@ -4,7 +4,13 @@ import better.files.File
 import com.fasterxml.jackson.databind.{DeserializationFeature, ObjectMapper}
 import com.fasterxml.jackson.module.scala.DefaultScalaModule
 
-case class SchemaDef(tables: Seq[TableDef])
+case class SchemaDef(tables: Seq[TableDef], conncetionDef: Option[ConnectionDef]){
+  def toMap: Map[String, TableDef] = {
+    tables.map { t => t.name -> t }.toMap
+  }
+}
+
+case class ConnectionDef(url: String, user: String, password: String)
 
 case class TableDef(name:String, columns: Seq[ColumnDef])
 
@@ -17,16 +23,26 @@ object SchemaDef {
   mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
   mapper.registerModule(DefaultScalaModule)
 
-  def load(): Map[String, TableDef] = {
+  def load(): Option[SchemaDef] = {
     val file = File("schema.json")
-    val schema: Map[String, TableDef] = if(file.exists){
+    if(file.exists){
       val json = file.contentAsString
-      val schema = mapper.readValue(json, classOf[SchemaDef])
-      schema.tables.map { t => t.name -> t }.toMap
+      Some(mapper.readValue(json, classOf[SchemaDef]))
     } else {
-      Map.empty
+      None
     }
-    schema
   }
+
+//  def load(): Map[String, TableDef] = {
+//    val file = File("schema.json")
+//    val schema: Map[String, TableDef] = if(file.exists){
+//      val json = file.contentAsString
+//      val schema = mapper.readValue(json, classOf[SchemaDef])
+//      schema.tables.map { t => t.name -> t }.toMap
+//    } else {
+//      Map.empty
+//    }
+//    schema
+//  }
 
 }

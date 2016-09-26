@@ -1,6 +1,8 @@
 package com.github.takezoe.scala.jdbc.validation
 
-import better.files.File
+import java.io.{File, FileInputStream}
+
+import com.github.takezoe.scala.jdbc.JdbcUtils._
 import com.fasterxml.jackson.databind.{DeserializationFeature, ObjectMapper}
 import com.fasterxml.jackson.module.scala.DefaultScalaModule
 
@@ -24,25 +26,22 @@ object SchemaDef {
   mapper.registerModule(DefaultScalaModule)
 
   def load(): Option[SchemaDef] = {
-    val file = File("schema.json")
+    val file = new File("schema.json")
     if(file.exists){
-      val json = file.contentAsString
+      // Load from file system
+      val json = using(new FileInputStream(file)){ in =>
+        readStreamAsString(in)
+      }
       Some(mapper.readValue(json, classOf[SchemaDef]))
     } else {
-      None
+      val in = Thread.currentThread.getContextClassLoader.getResourceAsStream("schema.json")
+      Option(in).map { in =>
+        // Load from classpath
+        val json = using(in){ in =>
+          readStreamAsString(in)
+        }
+        mapper.readValue(json, classOf[SchemaDef])
+      }
     }
   }
-
-//  def load(): Map[String, TableDef] = {
-//    val file = File("schema.json")
-//    val schema: Map[String, TableDef] = if(file.exists){
-//      val json = file.contentAsString
-//      val schema = mapper.readValue(json, classOf[SchemaDef])
-//      schema.tables.map { t => t.name -> t }.toMap
-//    } else {
-//      Map.empty
-//    }
-//    schema
-//  }
-
 }

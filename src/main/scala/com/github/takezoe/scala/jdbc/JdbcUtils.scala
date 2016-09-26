@@ -1,5 +1,6 @@
 package com.github.takezoe.scala.jdbc
 
+import java.io.{ByteArrayOutputStream, InputStream}
 import java.sql.Connection
 
 object JdbcUtils {
@@ -27,6 +28,18 @@ object JdbcUtils {
       f(closeable)
     } finally {
       closeQuietly(closeable)
+    }
+  }
+
+
+  def readStreamAsString(in: InputStream): String = {
+    val buf = new Array[Byte](1024 * 8)
+    var length = 0
+    using(new ByteArrayOutputStream()) { out =>
+      while ((length = in.read(buf)) != -1) {
+        out.write(buf, 0, length)
+      }
+      new String(out.toByteArray, "UTF-8")
     }
   }
 

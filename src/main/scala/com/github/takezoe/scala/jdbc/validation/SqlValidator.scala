@@ -1,5 +1,7 @@
 package com.github.takezoe.scala.jdbc.validation
 
+import java.sql.{Date, DriverManager, Time, Timestamp}
+
 import net.sf.jsqlparser.JSQLParserException
 import net.sf.jsqlparser.parser.CCJSqlParserUtil
 import net.sf.jsqlparser.statement.StatementVisitorAdapter
@@ -9,9 +11,14 @@ import net.sf.jsqlparser.statement.update.Update
 
 import scala.reflect.macros.blackbox.Context
 
+import com.github.takezoe.scala.jdbc.JdbcUtils._
+import com.github.takezoe.scala.jdbc.TypeMapper
+
 object SqlValidator {
 
-  def validateSql(sql: String, c: Context): Unit = {
+  val typeMapper = new TypeMapper() // TODO It should be replaceable.
+
+  def validateSql(sql: String, types: Seq[String], c: Context): Unit = {
     SchemaDef.load() match {
       case None => {
         try {
@@ -21,7 +28,23 @@ object SqlValidator {
         }
       }
       case Some(SchemaDef(_, Some(connectionDef))) => {
-        // TODO Run SQL on the real database here
+        val conn = DriverManager.getConnection(connectionDef.url, connectionDef.user, connectionDef.password)
+        try {
+          conn.setAutoCommit(false)
+          using(conn.prepareStatement(sql)){ stmt =>
+            try {
+              types.zipWithIndex.foreach { case (t, i) =>
+                typeMapper.set(stmt, i + 1, getTestValue(t))
+              }
+              stmt.execute()
+            } catch {
+              case e: Exception => c.error(c.enclosingPosition, e.toString)
+            }
+          }
+        } finally {
+          rollbackQuietly(conn)
+          closeQuietly(conn)
+        }
       }
       case Some(schemaDef) => {
         try {
@@ -45,6 +68,21 @@ object SqlValidator {
           case e: JSQLParserException => c.error(c.enclosingPosition, e.getCause.getMessage)
         }
       }
+    }
+  }
+
+  // TODO Move to TypeMapper?
+  private def getTestValue(t: String): Any = {
+    t match {
+      case "Int"                => 0
+      case "Long"               => 0L
+      case "Double"             => 0D
+      case "Short"              => 0:Short
+      case "Float"              => 0F
+      case "java.sql.Timestamp" => new Timestamp(System.currentTimeMillis)
+      case "java.sql.Date"      => new Date(System.currentTimeMillis)
+      case "java.sql.Time"      => new Time(System.currentTimeMillis)
+      case "String"             => "-"
     }
   }
 

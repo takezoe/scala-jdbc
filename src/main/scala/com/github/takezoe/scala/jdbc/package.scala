@@ -39,28 +39,33 @@ object Macros {
     import c.universe._
     sql.tree match {
       case Literal(x) => x.value match {
-        case sql: String => SqlValidator.validateSql(sql, c)
+        case sql: String => SqlValidator.validateSql(sql, Nil, c)
           val Apply(fun, _) = reify(new SqlTemplate("")).tree
           c.Expr[com.github.takezoe.scala.jdbc.SqlTemplate](Apply.apply(fun, Literal(x) :: Nil))
       }
       case Apply(Select(Apply(Select(Select((_, _)), _), trees), _), args) => {
         val sql = trees.collect { case Literal(x) => x.value.asInstanceOf[String] }.mkString("?")
-        SqlValidator.validateSql(sql, c)
+        SqlValidator.validateSql(sql, args.map(_.tpe.toString), c)
         val Apply(fun, _) = reify(new SqlTemplate("")).tree
+
+        args.foreach { arg =>
+          println(arg.tpe.getClass)
+        }
+
         c.Expr[SqlTemplate](Apply.apply(fun, Literal(Constant(sql)) :: args))
       }
       case Select(Apply(Select(a, b), List(Literal(x))), TermName("stripMargin")) => {
         x.value match {
           case s: String =>
             val sql = s.stripMargin
-            SqlValidator.validateSql(sql, c)
+            SqlValidator.validateSql(sql, Nil, c)
             val Apply(fun, _) = reify(new SqlTemplate("")).tree
             c.Expr[SqlTemplate](Apply.apply(fun, Literal(Constant(sql)) :: Nil))
         }
       }
       case Select(Apply(_, List(Apply(Select(Apply(Select(Select((_, _)), _), trees), _), args))), TermName("stripMargin")) => {
         val sql = trees.collect { case Literal(x) => x.value.asInstanceOf[String] }.mkString("?").stripMargin
-        SqlValidator.validateSql(sql, c)
+        SqlValidator.validateSql(sql, args.map(_.tpe.toString), c)
         val Apply(fun, _) = reify(new SqlTemplate("")).tree
         c.Expr[SqlTemplate](Apply.apply(fun, Literal(Constant(sql)) :: args))
       }

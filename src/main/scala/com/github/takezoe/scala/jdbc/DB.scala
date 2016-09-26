@@ -2,6 +2,7 @@ package com.github.takezoe.scala.jdbc
 
 import java.sql._
 import scala.reflect.ClassTag
+import IOUtils._
 
 object DB {
 
@@ -23,19 +24,12 @@ class DB(conn: Connection, typeMapper: TypeMapper){
 
   def selectFirst[T](template: SqlTemplate)(f: ResultSet => T): Option[T] = {
     execute(conn, template){ stmt =>
-      try {
-        val rs = stmt.executeQuery()
-        try {
-          if(rs.next){
-            Some(f(rs))
-          } else {
-            None
-          }
-        } finally {
-          rs.close()
+      using(stmt.executeQuery()){ rs =>
+        if(rs.next){
+          Some(f(rs))
+        } else {
+          None
         }
-      } finally {
-        stmt.close()
       }
     }
   }
@@ -108,19 +102,12 @@ class DB(conn: Connection, typeMapper: TypeMapper){
 
   def select[T](template: SqlTemplate)(f: ResultSet => T): Seq[T] = {
     execute(conn, template){ stmt =>
-      try {
-        val rs = stmt.executeQuery()
-        try {
-          val list = new scala.collection.mutable.ListBuffer[T]
-          while(rs.next){
-            list += f(rs)
-          }
-          list.toSeq
-        } finally {
-          rs.close()
+      using(stmt.executeQuery()){ rs =>
+        val list = new scala.collection.mutable.ListBuffer[T]
+        while(rs.next){
+          list += f(rs)
         }
-      } finally {
-        stmt.close()
+        list.toSeq
       }
     }
   }
@@ -201,17 +188,10 @@ class DB(conn: Connection, typeMapper: TypeMapper){
 
   def scan[T](template: SqlTemplate)(f: ResultSet => Unit): Unit = {
     execute(conn, template){ stmt =>
-      try {
-        val rs = stmt.executeQuery()
-        try {
-          while(rs.next){
-            f(rs)
-          }
-        } finally {
-          rs.close()
+      using(stmt.executeQuery()){ rs =>
+        while(rs.next){
+          f(rs)
         }
-      } finally {
-        stmt.close()
       }
     }
   }
@@ -298,7 +278,7 @@ class DB(conn: Connection, typeMapper: TypeMapper){
       r
     } catch {
       case e: Throwable =>
-        conn.rollback()
+        rollbackQuietly(conn)
         throw e
     }
   }
@@ -306,14 +286,11 @@ class DB(conn: Connection, typeMapper: TypeMapper){
   def close(): Unit = conn.close()
 
   protected def execute[T](conn: Connection, template: SqlTemplate)(f: (PreparedStatement) => T): T = {
-    val stmt = conn.prepareStatement(template.sql)
-    try {
+    using(conn.prepareStatement(template.sql)){ stmt =>
       template.params.zipWithIndex.foreach { case (x, i) =>
         typeMapper.set(stmt, i + 1, x)
       }
       f(stmt)
-    } finally {
-      stmt.close()
     }
   }
 

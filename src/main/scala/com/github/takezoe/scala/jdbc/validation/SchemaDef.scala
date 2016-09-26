@@ -1,10 +1,18 @@
 package com.github.takezoe.scala.jdbc.validation
 
-import better.files.File
+import java.io.{File, FileInputStream}
+
+import com.github.takezoe.scala.jdbc.IOUtils._
 import com.fasterxml.jackson.databind.{DeserializationFeature, ObjectMapper}
 import com.fasterxml.jackson.module.scala.DefaultScalaModule
 
-case class SchemaDef(tables: Seq[TableDef])
+case class SchemaDef(tables: Seq[TableDef], connection: Option[ConnectionDef]){
+  def toMap: Map[String, TableDef] = {
+    tables.map { t => t.name -> t }.toMap
+  }
+}
+
+case class ConnectionDef(driver: String, url: String, user: String, password: String)
 
 case class TableDef(name:String, columns: Seq[ColumnDef])
 
@@ -17,16 +25,23 @@ object SchemaDef {
   mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
   mapper.registerModule(DefaultScalaModule)
 
-  def load(): Map[String, TableDef] = {
-    val file = File("schema.json")
-    val schema: Map[String, TableDef] = if(file.exists){
-      val json = file.contentAsString
-      val schema = mapper.readValue(json, classOf[SchemaDef])
-      schema.tables.map { t => t.name -> t }.toMap
+  def load(): Option[SchemaDef] = {
+    val file = new File("schema.json")
+    if(file.exists){
+      // Load from file system
+      val json = using(new FileInputStream(file)){ in =>
+        readStreamAsString(in)
+      }
+      Some(mapper.readValue(json, classOf[SchemaDef]))
     } else {
-      Map.empty
+      val in = Thread.currentThread.getContextClassLoader.getResourceAsStream("schema.json")
+      Option(in).map { in =>
+        // Load from classpath
+        val json = using(in){ in =>
+          readStreamAsString(in)
+        }
+        mapper.readValue(json, classOf[SchemaDef])
+      }
     }
-    schema
   }
-
 }

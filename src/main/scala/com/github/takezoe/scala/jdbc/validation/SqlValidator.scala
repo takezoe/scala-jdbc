@@ -31,7 +31,7 @@ object SqlValidator {
         val conn = DriverManager.getConnection(connectionDef.url, connectionDef.user, connectionDef.password)
         try {
           conn.setAutoCommit(false)
-          using(conn.prepareStatement(sql)){ stmt =>
+          using(conn.prepareStatement(adjustSql(sql))){ stmt =>
             try {
               types.zipWithIndex.foreach { case (t, i) =>
                 typeMapper.set(stmt, i + 1, getTestValue(t))
@@ -68,6 +68,14 @@ object SqlValidator {
           case e: JSQLParserException => c.error(c.enclosingPosition, e.getCause.getMessage)
         }
       }
+    }
+  }
+
+  private def adjustSql(sql: String): String = {
+    if(sql.trim.toUpperCase.startsWith("SELECT")){
+      sql + " LIMIT 0"
+    } else {
+      sql
     }
   }
 

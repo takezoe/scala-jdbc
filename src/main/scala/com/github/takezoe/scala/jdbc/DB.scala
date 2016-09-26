@@ -2,7 +2,7 @@ package com.github.takezoe.scala.jdbc
 
 import java.sql._
 import scala.reflect.ClassTag
-import JdbcUtils._
+import IOUtils._
 
 object DB {
 

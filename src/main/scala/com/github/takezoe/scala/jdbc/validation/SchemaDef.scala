@@ -2,17 +2,17 @@ package com.github.takezoe.scala.jdbc.validation
 
 import java.io.{File, FileInputStream}
 
-import com.github.takezoe.scala.jdbc.JdbcUtils._
+import com.github.takezoe.scala.jdbc.IOUtils._
 import com.fasterxml.jackson.databind.{DeserializationFeature, ObjectMapper}
 import com.fasterxml.jackson.module.scala.DefaultScalaModule
 
-case class SchemaDef(tables: Seq[TableDef], conncetionDef: Option[ConnectionDef]){
+case class SchemaDef(tables: Seq[TableDef], connection: Option[ConnectionDef]){
   def toMap: Map[String, TableDef] = {
     tables.map { t => t.name -> t }.toMap
   }
 }
 
-case class ConnectionDef(url: String, user: String, password: String)
+case class ConnectionDef(driver: String, url: String, user: String, password: String)
 
 case class TableDef(name:String, columns: Seq[ColumnDef])
 

@@ -11,7 +11,7 @@ import net.sf.jsqlparser.statement.update.Update
 
 import scala.reflect.macros.blackbox.Context
 
-import com.github.takezoe.scala.jdbc.JdbcUtils._
+import com.github.takezoe.scala.jdbc.IOUtils._
 import com.github.takezoe.scala.jdbc.TypeMapper
 
 object SqlValidator {
@@ -27,8 +27,9 @@ object SqlValidator {
           case e: JSQLParserException => c.error(c.enclosingPosition, e.getCause.getMessage)
         }
       }
-      case Some(SchemaDef(_, Some(connectionDef))) => {
-        val conn = DriverManager.getConnection(connectionDef.url, connectionDef.user, connectionDef.password)
+      case Some(SchemaDef(_, Some(connection))) => {
+        Class.forName(connection.driver)
+        val conn = DriverManager.getConnection(connection.url, connection.user, connection.password)
         try {
           conn.setAutoCommit(false)
           using(conn.prepareStatement(adjustSql(sql))){ stmt =>

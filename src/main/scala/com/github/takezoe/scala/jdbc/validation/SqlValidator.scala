@@ -2,24 +2,18 @@ package com.github.takezoe.scala.jdbc.validation
 
 import java.sql.{Date, DriverManager, Time, Timestamp}
 
-import net.sf.jsqlparser.JSQLParserException
-import net.sf.jsqlparser.parser.CCJSqlParserUtil
-import net.sf.jsqlparser.statement.StatementVisitorAdapter
-import net.sf.jsqlparser.statement.delete.Delete
-import net.sf.jsqlparser.statement.insert.Insert
-import net.sf.jsqlparser.statement.update.Update
-
 import scala.reflect.macros.blackbox.Context
-
 import com.github.takezoe.scala.jdbc.IOUtils._
 import com.github.takezoe.scala.jdbc.TypeMapper
+import net.sf.jsqlparser.JSQLParserException
+import net.sf.jsqlparser.parser.CCJSqlParserUtil
 
 object SqlValidator {
 
   val typeMapper = new TypeMapper() // TODO It should be replaceable.
 
   def validateSql(sql: String, types: Seq[String], c: Context): Unit = {
-    SchemaDef.load() match {
+    ConnectionDef.load() match {
       case None => {
         try {
           CCJSqlParserUtil.parse(sql)
@@ -27,7 +21,7 @@ object SqlValidator {
           case e: JSQLParserException => c.error(c.enclosingPosition, e.getCause.getMessage)
         }
       }
-      case Some(SchemaDef(_, Some(connection))) => {
+      case Some(connection) => {
         Class.forName(connection.driver)
         val conn = DriverManager.getConnection(connection.url, connection.user, connection.password)
         try {
@@ -45,28 +39,6 @@ object SqlValidator {
         } finally {
           rollbackQuietly(conn)
           closeQuietly(conn)
-        }
-      }
-      case Some(schemaDef) => {
-        try {
-          val parse = CCJSqlParserUtil.parse(sql)
-          val schema = schemaDef.toMap
-          parse.accept(new StatementVisitorAdapter {
-            override def visit(select: net.sf.jsqlparser.statement.select.Select): Unit = {
-              new SelectValidator(c, select, schema).validate()
-            }
-            override def visit(insert: Insert): Unit = {
-              new InsertValidator(c, insert, schema).validate()
-            }
-            override def visit(update: Update): Unit = {
-              new UpdateValidator(c, update, schema).validate()
-            }
-            override def visit(delete: Delete): Unit = {
-              new DeleteValidator(c, delete, schema).validate()
-            }
-          })
-        } catch {
-          case e: JSQLParserException => c.error(c.enclosingPosition, e.getCause.getMessage)
         }
       }
     }

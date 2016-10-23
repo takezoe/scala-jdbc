@@ -88,28 +88,17 @@ db.selectFirst(sqlc("SELECT * FROM USERS WHERE USER_ID = $userId")){ rs =>
 When a given SQL is invalid, this macro reports error in compile time.
 
 In default, this macro checks only sql syntax using [JsqlParser](https://github.com/JSQLParser/JSqlParser).
-It's also possible to check existence of tables and columns by database schema definition by defining `schema.json` in the current directory.
-Here is an example of `schema.json`:
+
+It's also possible to validate by throwing SQL against the actual database.
+Create `database.json` in the current directory with following content to enable this feature:
+
 
 ```javascript
 {
-  "tables":[
-    {
-      "name": "USER",
-      "columns": [
-        { "name": "USER_ID" },
-        { "name": "USER_NAME" },
-        { "name": "COMPANY_ID" }
-      ]
-    },
-    {
-      "name": "COMPANY",
-      "columns": [
-        { "name": "COMPANY_ID" },
-        { "name": "COMPANY_NAME" }
-      ]
-    }
-  ]
+  "driver": "org.h2.Driver",
+  "url": "jdbc:h2:~/.gitbucket/data",
+  "user": "sa",
+  "password": "sa"
 }
 ```
 

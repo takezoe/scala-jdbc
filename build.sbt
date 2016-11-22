@@ -4,23 +4,27 @@ organization := "com.github.takezoe"
 
 version := "1.0.3-SNAPSHOT"
 
-scalaVersion := "2.11.8"
+scalaVersion := "2.12.0"
+
+crossScalaVersions := Seq("2.11.8", "2.12.0")
 
 libraryDependencies ++= Seq(
   "com.github.jsqlparser" % "jsqlparser" % "0.9.6",
   "org.scalamacros" %% "resetallattrs"  % "1.0.0",
-  "com.fasterxml.jackson.module" %% "jackson-module-scala" % "2.7.2",
+  "com.fasterxml.jackson.module" %% "jackson-module-scala" % "2.8.4",
   "org.scala-lang" % "scala-reflect"  % scalaVersion.value,
   "org.scala-lang" % "scala-compiler" % scalaVersion.value % "provided",
-  "org.scalatest" %% "scalatest" % "2.2.1" % "test"
+  "org.scalatest" %% "scalatest" % "3.0.1" % "test"
 )
 
 publishMavenStyle := true
 
-publishTo <<= version { (v: String) =>
+publishTo := {
   val nexus = "https://oss.sonatype.org/"
-  if (v.trim.endsWith("SNAPSHOT")) Some("snapshots" at nexus + "content/repositories/snapshots")
-  else                             Some("releases"  at nexus + "service/local/staging/deploy/maven2")
+  if (version.value.trim.endsWith("SNAPSHOT"))
+    Some("snapshots" at nexus + "content/repositories/snapshots")
+  else
+    Some("releases"  at nexus + "service/local/staging/deploy/maven2")
 }
 
 scalacOptions := Seq("-deprecation")

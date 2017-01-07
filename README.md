@@ -85,31 +85,5 @@ db.selectFirst(sqlc("SELECT * FROM USERS WHERE USER_ID = $userId")){ rs =>
 }
 ```
 
-When a given SQL is invalid, this macro reports error in compile time.
-
-In default, this macro checks only sql syntax using [JsqlParser](https://github.com/JSQLParser/JSqlParser).
-
-It's also possible to validate by throwing SQL against the actual database.
-Create `database.json` in the current directory with following content to enable this feature:
-
-
-```javascript
-{
-  "driver": "org.h2.Driver",
-  "url": "jdbc:h2:~/.gitbucket/data",
-  "user": "sa",
-  "password": "sa"
-}
-```
-
-However `sqlc` macro is still experimental feature, so you have to use SNAPSHOT version of scala-jdbc to use it:
-
-```scala
-resolvers += "Sonatype OSS Snapshots" at "https://oss.sonatype.org/content/repositories/snapshots"
-
-libraryDependencies += "com.github.takezoe" %% "scala-jdbc" % "1.0.3-SNAPSHOT"
-```
-
-If you get invalid validation results, please report them to [issues](https://github.com/takezoe/scala-jdbc/issues).
-
+This macro checks the sql syntax using [JsqlParser](https://github.com/JSQLParser/JSqlParser). When a given SQL is invalid, errors are reported in compile time.
 

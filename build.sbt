@@ -2,7 +2,7 @@ name := "scala-jdbc"
 
 organization := "com.github.takezoe"
 
-version := "1.0.4-SNAPSHOT"
+version := "1.0.4"
 
 scalaVersion := "2.12.1"
 

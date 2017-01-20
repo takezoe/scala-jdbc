@@ -3,7 +3,7 @@
 Better JDBC wrapper for Scala.
 
 ```scala
-libraryDependencies += "com.github.takezoe" %% "scala-jdbc" % "1.0.3"
+libraryDependencies += "com.github.takezoe" %% "scala-jdbc" % "1.0.4"
 ```
 
 You can use better-jdbc by adding a following import statements:

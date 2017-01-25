@@ -19,7 +19,7 @@ package object jdbc {
   implicit class SqlStringInterpolation(val sc: StringContext) extends AnyVal {
     def sql(args: Any*): SqlTemplate = {
       val sql = sc.parts.mkString("?")
-      SqlTemplate(sql, args.toSeq)
+      SqlTemplate(sql, args:_*)
     }
   }
 

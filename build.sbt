@@ -13,7 +13,8 @@ libraryDependencies ++= Seq(
   "org.scalamacros" %% "resetallattrs"  % "1.0.0",
   "org.scala-lang" % "scala-reflect"  % scalaVersion.value,
   "org.scala-lang" % "scala-compiler" % scalaVersion.value % "provided",
-  "org.scalatest" %% "scalatest" % "3.0.1" % "test"
+  "org.scalatest" %% "scalatest" % "3.0.1" % "test",
+  "com.h2database" % "h2" % "1.4.192" % "test"
 )
 
 publishMavenStyle := true

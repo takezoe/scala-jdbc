@@ -48,9 +48,9 @@ object Macros {
         SqlValidator.validateSql(sql, args.map(_.tpe.toString), c)
         val Apply(fun, _) = reify(new SqlTemplate("")).tree
 
-        args.foreach { arg =>
-          println(arg.tpe.getClass)
-        }
+//        args.foreach { arg =>
+//          println(arg.tpe.getClass)
+//        }
 
         c.Expr[SqlTemplate](Apply.apply(fun, Literal(Constant(sql)) :: args))
       }

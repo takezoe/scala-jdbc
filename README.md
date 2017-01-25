@@ -3,7 +3,7 @@
 Better JDBC wrapper for Scala.
 
 ```scala
-libraryDependencies += "com.github.takezoe" %% "scala-jdbc" % "1.0.4"
+libraryDependencies += "com.github.takezoe" %% "scala-jdbc" % "1.0.5"
 ```
 
 You can use better-jdbc by adding a following import statements:
@@ -40,7 +40,7 @@ Map `ResultSet` to the case class:
 case class User(userId: Int, userName: String)
 
 val users: Seq[User] = DB.autoClose(conn) { db =>
-  db.select("SELECT USER_ID, USER_NAME FROM USERS", User.apply)
+  db.select("SELECT USER_ID, USER_NAME FROM USERS", User.apply _)
 }
 ```
 
@@ -80,7 +80,7 @@ DB.autoClose(conn) { db =>
 scala-jdbc provides `sqlc` macro that validates a given SQL. You can use it instead of sql string interpolation.
 
 ```scala
-db.selectFirst(sqlc("SELECT * FROM USERS WHERE USER_ID = $userId")){ rs =>
+db.selectFirst(sqlc(s"SELECT * FROM USERS WHERE USER_ID = $userId")){ rs =>
   (rs.getInt("USER_ID"), rs.getString("USER_NAME"))
 }
 ```

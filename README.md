@@ -1,4 +1,4 @@
-# scala-jdbc
+# scala-jdbc [![Actions Status](https://github.com/takezoe/scala-jdbc/workflows/CI/badge.svg)](https://github.com/takezoe/scala-jdbc/actions)
 
 Better JDBC wrapper for Scala.
 

@@ -6,7 +6,7 @@ version := "1.0.5"
 
 scalaVersion := "2.12.8"
 
-crossScalaVersions := Seq("2.11.8", "2.12.8", "2.13.0")
+crossScalaVersions := Seq("2.11.8", "2.12.8", "2.13.1")
 
 libraryDependencies ++= Seq(
   "com.github.jsqlparser" % "jsqlparser" % "0.9.6",

@@ -31,7 +31,7 @@ scalacOptions := Seq("-deprecation")
 
 //unmanagedClasspath in Compile += baseDirectory.value / "src" / "main" / "resources"
 
-publishArtifact in Test := false
+Test / publishArtifact := false
 
 pomIncludeRepository := { _ => false }
 

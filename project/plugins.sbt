@@ -1,3 +1,3 @@
 logLevel := Level.Warn
 
-addSbtPlugin("com.typesafe.sbt" % "sbt-pgp" % "0.8.3")
+addSbtPlugin("com.github.sbt" % "sbt-pgp" % "2.1.2")

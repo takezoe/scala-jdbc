@@ -8,6 +8,7 @@ class SqlTemplateSpec extends FunSuite {
 
   test("set parameters"){
     val a = Article(0, System.currentTimeMillis, "takezoe", "Database access in Scala")
+    Class.forName("org.h2.Driver")
     DB.autoClose(DriverManager.getConnection("jdbc:h2:mem:test;TRACE_LEVEL_FILE=4")) { db =>
       db.update(sql"""CREATE TABLE articles (
         id serial PRIMARY KEY,

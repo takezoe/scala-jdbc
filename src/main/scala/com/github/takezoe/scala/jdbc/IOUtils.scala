@@ -31,7 +31,6 @@ object IOUtils {
     }
   }
 
-
   def readStreamAsString(in: InputStream): String = {
     val buf = new Array[Byte](1024 * 8)
     var length = 0

@@ -18,10 +18,9 @@ class SqlTemplateSpec extends FunSuite {
       )""")
 
       db.update(sql"INSERT INTO articles (published,author,title) VALUES (${a.published},${a.author},${a.title})")
-      db.update(sqlc(s"INSERT INTO articles (published,author,title) VALUES (${a.published},${a.author},${a.title})"))
 
       val aricles = db.select("SELECT * FROM articles", Article.apply _)
-      assert(aricles.size == 2)
+      assert(aricles.size == 1)
     }
   }
 

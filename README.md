@@ -74,16 +74,3 @@ DB.autoClose(conn) { db =>
   }
 }
 ```
-
-## SQL Validation (Experimental)
-
-scala-jdbc provides `sqlc` macro that validates a given SQL. You can use it instead of sql string interpolation.
-
-```scala
-db.selectFirst(sqlc(s"SELECT * FROM USERS WHERE USER_ID = $userId")){ rs =>
-  (rs.getInt("USER_ID"), rs.getString("USER_NAME"))
-}
-```
-
-This macro checks the sql syntax using [JsqlParser](https://github.com/JSQLParser/JSqlParser). When a given SQL is invalid, errors are reported in compile time.
-

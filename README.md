@@ -1,4 +1,4 @@
-# scala-jdbc [![Actions Status](https://github.com/takezoe/scala-jdbc/workflows/CI/badge.svg)](https://github.com/takezoe/scala-jdbc/actions) [![scala-jdbc Scala version support](https://index.scala-lang.org/takezoe/scala-jdbc/scala-jdbc/latest.svg](https://index.scala-lang.org/takezoe/scala-jdbc/scala-jdbc)
+# scala-jdbc [![Actions Status](https://github.com/takezoe/scala-jdbc/workflows/CI/badge.svg)](https://github.com/takezoe/scala-jdbc/actions) [![scala-jdbc Scala version support](https://index.scala-lang.org/takezoe/scala-jdbc/scala-jdbc/latest-by-scala-version.svg?platform=jvm)](https://index.scala-lang.org/takezoe/scala-jdbc/scala-jdbc)
 
 Better JDBC wrapper for Scala.
 

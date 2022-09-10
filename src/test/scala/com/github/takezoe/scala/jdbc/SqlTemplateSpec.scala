@@ -2,9 +2,9 @@ package com.github.takezoe.scala.jdbc
 
 import java.sql.DriverManager
 
-import org.scalatest.FunSuite
+import org.scalatest.funsuite.AnyFunSuite
 
-class SqlTemplateSpec extends FunSuite {
+class SqlTemplateSpec extends AnyFunSuite {
 
   test("set parameters"){
     val a = Article(0, System.currentTimeMillis, "takezoe", "Database access in Scala")

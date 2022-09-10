@@ -2,16 +2,14 @@ name := "scala-jdbc"
 
 organization := "com.github.takezoe"
 
-version := "1.0.5"
+version := "1.0.6"
 
 scalaVersion := "2.13.8"
 
-crossScalaVersions := Seq("2.11.12", "2.12.16", "2.13.8")
+crossScalaVersions := Seq("2.11.12", "2.12.16", "2.13.8", "3.2.0")
 
 libraryDependencies ++= Seq(
-  "org.scala-lang" % "scala-reflect"  % scalaVersion.value,
-  "org.scala-lang" % "scala-compiler" % scalaVersion.value % "provided",
-  "org.scalatest" %% "scalatest" % "3.0.8" % "test",
+  "org.scalatest" %% "scalatest" % "3.2.13" % "test",
   "com.h2database" % "h2" % "1.4.192" % "test"
 )
 
